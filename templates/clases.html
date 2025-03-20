@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clases Disponibles</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 90px; height: auto;">
+                <span style="color: rgb(240, 240, 32);"></span>
+            </a>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/" style="color: rgb(240, 240, 32);">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout" style="color: rgb(240, 240, 32);">Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="font-size: 1.5em; color: rgb(240, 240, 32);">Horario</th>
+                    <th style="font-size: 1.5em; color: rgb(240, 240, 32);">Cupos Máximos</th>
+                    <th style="font-size: 1.5em; color: rgb(240, 240, 32);">Ocupación</th>
+                    <th style="font-size: 1.5em; color: rgb(240, 240, 32);">Reserva</th>
+                </tr>
+            </thead>
+            <tbody id="clases-tbody"></tbody>
+                {% if clases|length == 0 %}
+                <tr>
+                    <td colspan="4" class="text-center" style="color: rgb(240, 240, 32);">
+                        {% if current_day in ['Friday', 'Saturday', 'Sunday'] %}
+                            Hoy el box permanecerá cerrado
+                        {% else %}
+                            No hay clases disponibles
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                    {% set all_full = True %}
+                    {% for clase in clases %}
+                        <tr>
+                            <td style="color: rgb(240, 240, 32);">{{ clase.horario.strftime('%H:%M') }}</td>
+                            <td style="color: rgb(240, 240, 32);">15 pax</td>
+                            <td style="color: rgb(240, 240, 32);">{{ clase.ocupacion }}</td>
+                            <td>
+                                {% if clase.ocupacion < 15 %}
+                                    <button class="reservar-btn" data-clase-id="{{ clase.id }}" style="color: rgb(18, 18, 18);">Reservar</button>
+                                    {% set all_full = False %}
+                                {% else %}
+                                    <span style="color: rgb(240, 240, 32);">Clase llena</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <p class="mb-0 text-center" style="color: rgb(240, 240, 32);">© 2025 11680-Box. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        function updateClases() {
+            fetch('{{ url_for("get_clases_data") }}')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('clases-tbody');
+                tbody.innerHTML = ''; // Limpiar el contenido previo
+
+                const currentDay = new Date().toLocaleString('es-ES', { weekday: 'long' });
+
+                if (['viernes', 'sábado', 'domingo'].includes(currentDay.toLowerCase())) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td colspan="4" class="text-center" style="color: rgb(240, 240, 32);">
+                        Hoy el box permanecerá cerrado
+                    </td>
+                    `;
+                    tbody.appendChild(row);
+                } else if (data.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td colspan="4" class="text-center" style="color: rgb(240, 240, 32);">
+                        No hay clases disponibles
+                    </td>
+                    `;
+                    tbody.appendChild(row);
+                } else {
+                    let allFull = true;
+                    data.forEach(clase => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="color: rgb(240, 240, 32);">${new Date(clase.horario).toLocaleTimeString()}</td>
+                            <td style="color: rgb(240, 240, 32);">${clase.cupos_maximos}</td>
+                            <td style="color: rgb(240, 240, 32);">${clase.ocupacion}</td>
+                            <td>
+                                ${clase.ocupacion < clase.cupos_maximos 
+                                ? `<button class="reservar-btn" data-clase-id="${clase.id}" style="color: rgb(240, 240, 32);">Reservar</button>`
+                                : '<span style="color: rgb(240, 240, 32);">Clase llena</span>'
+                                }
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                        if (clase.ocupacion < clase.cupos_maximos) {
+                            allFull = false;
+                        }
+                    });
+                    if (allFull) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td colspan="4" class="text-center" style="color: rgb(240, 240, 32);">
+                                Todas las clases están llenas
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                }
+            });
+
+            // Agregar un evento de clic a cada botón de reserva
+            document.querySelectorAll('.reservar-btn').forEach(button => {
+                const newButton = button.cloneNode(true);
+                button.replaceWith(newButton);
+                newButton.addEventListener('click', function() {
+                    const claseId = this.dataset.claseId;
+                    // Realiza la llamada para reservar la clase
+                    fetch(`/reservar/${claseId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ claseId: claseId })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.error) {
+                            alert(result.error); // Muestra un mensaje de error si no se puede reservar
+                        } else {
+                            alert(result.message); // Muestra un mensaje de éxito si se puede reservar
+                            updateClases(); // Actualiza las clases después de reservar
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error reservando clase:', error);
+                    });
+                });
+            });
+        }
+
+        updateClases(); // Llama a la función una vez al cargar la página
+        setInterval(updateClases, 5000); // Actualiza cada 5 segundos
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+html, body {
+    height: 100%; /* Asegura que el HTML y el body ocupen toda la altura */
+  
+}
+
+body {
+    display: flex; /* Usa flexbox para el layout */
+    flex-direction: column; /* Organiza los elementos verticalmente */
+    font-family: 'Poppins', sans-serif;
+    background: url('/static/fondo-crossfit.jpg') no-repeat center center fixed; /* Ajusta la ruta y el fondo */
+    background-size: cover;
+    color: rgb(229, 197, 37);
+}
+
+.container {
+    flex: auto; /* Hace que el contenedor principal ocupe el espacio disponible */
+    padding: 20px; /* Puedes ajustar el padding según sea necesario */
+    width: 300%; /* Ajusta el contenedor al ancho de la página */
+   
+}
+
+.container {
+    flex: 5; /* Hace que el contenedor principal ocupe el espacio disponible */
+    padding: 20px; /* Puedes ajustar el padding según sea necesario */
+    max-width: 100%; /* Establece un ancho máximo para el contenedor */
+    margin: 0 auto; /* Centra el contenedor horizontalmente */
+    background-color: rgba(44, 43, 43, 0.8); /* Fondo blanco semitransparente */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para darle profundidad */
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(249, 232, 4, 0.945);
+    transition: transform 0.3s;
+    margin-bottom: 1.5rem; /* Cambia este valor a 1.5rem o un valor razonable, no 63.5rem */
+}
+
+.card:hover {
+    transform: translateY(-10px);
+}
+
+.btn-primary {
+    background-color: #f1d226;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+}
+
+.btn-primary:hover {
+    background-color: #e0bd20;
+}
+
+.footer {
+    background: linear-gradient(90deg, #2e2d2d, #969393);
+    color: rgb(241, 217, 35);
+    padding: 20px 0;
+    text-align: center;
+}
